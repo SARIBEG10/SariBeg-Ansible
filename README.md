@@ -13,3 +13,5 @@ ANSIBLE PLAYBOOKS FOR:
 - NFS
 
 - Useful Basic Modules in myproject Folder
+
+NOTE: All Playbooks and their Tasks have description 
