@@ -1,0 +1,5 @@
+ansible_user: Administrator
+ansible_password: qazwsx@123
+ansible_port: 5986 # check this port number on .ps1 file on windows server which downloaded from git 
+ansible_connection: winrm
+ansible_winrm_server_cert_validation: ignore

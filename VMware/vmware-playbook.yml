@@ -1,0 +1,4 @@
+- hosts:
+    - vCenter
+  roles:
+    - vmware

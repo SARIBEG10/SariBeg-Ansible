@@ -1,0 +1,9 @@
+---
+- hosts: anisahosts
+  gather_facts: False
+  roles:
+    - docker
+
+
+
+

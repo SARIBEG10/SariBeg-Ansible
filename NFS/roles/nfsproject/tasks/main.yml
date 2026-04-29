@@ -1,0 +1,100 @@
+- name: ------- install firewalld -------
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop: [firewalld, ssh, nfs-utils]
+  tags: install_services
+
+- name: ------ start and enable firewalld -------
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop: [firewalld, nfs-server]
+  tags: start_firewalld_nfs_server
+
+
+- name: ------- Configure firewalld for each node -------
+  firewalld:
+    service: "{{ item }}"
+    zone: public
+    immediate: yes
+    permanent: yes
+    state: enabled
+  with_items:
+    - ssh
+    - nfs
+  tags: config_firewalld
+
+
+- name: ------- create /data1 for each node -------
+  file:
+    state: directory
+    owner: nfsnobody
+    group: nfsnobody
+    mode: 0755
+    path: /data1
+  tags: create_data1
+
+
+- name: ------- create /etc/exports on each node -------
+  file:
+    state: touch
+    path: /etc/exports
+    mode: 0644
+  tags: create_exports
+
+- name: ------- edit /etc/exports on nfs-server node -------
+  lineinfile:
+    path: /etc/exports
+    line: '/data1 "{{item}}" (rw,sync,no_root_squash,no_subtree_check)'
+    state: present
+  loop: "{{ groups['nfs_client'] }} "
+  when: server_role == "nfsserver"
+  tags: add_in_exports
+
+- name: ------- edit /etc/exports on nfs-client node -------
+  lineinfile:
+    path: /etc/exports
+    line: '/data1 "{{ item }}" (rw,sync,no_root_squash,no_subtree_check)'
+    state: present
+  loop: "{{ groups['nfs_server'] }}"
+  when: server_role == "nfsclient"
+  tags: add_in_exports
+
+- name: ------- exportfs -------
+  shell: "exportfs -arv"
+  tags: exportfs_on_all_nodes
+
+
+- name: ------- mount the nfs on clients -------
+  mount:
+    fstype: nfs
+    src: "{{item}}/data1"
+    path: /data1    
+    state: mounted
+    opts: rw,sync,hard,intr
+  with_items:
+    - "{{ groups.nfs_server }}"
+  when: server_role == "nfsclient"
+  tags: mount_nfs_on_clients
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

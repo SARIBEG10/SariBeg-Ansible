@@ -1,0 +1,90 @@
+- name: ----- create directory in windows -----
+  win_file:
+    path: c:\dir1
+    state: directory
+  tags: [create_dir1]
+
+- name: ----- create file1 in windows -----
+  win_file:
+    path: c:\dir1\file1
+    state: touch
+  tags: [create_file1]
+
+- name: ----- copy file in windows -----
+  win_copy:
+    src: test.txt
+    dest: c:\dir1
+  tags: [copy_file]
+
+- name: ----- install .NET framework feature in windows -----
+  win_feature:
+    name: NET-Framework-Core
+    source: D:\sources\sxs # iso path of windows
+    state: present
+    restart: yes
+  tags: [install_feature]
+
+- name: ----- Install telnet-client feature -----
+  win_feature:
+    name: telnet-client
+    source: D:\sources\sxs # iso path of windows 
+    state: present
+    restart: yes
+  tags: [install_telnet]
+
+
+- name: ----- win_service module -----
+  win_service:
+    name: W32Time
+    start_mode: auto
+    state: started # stopped/restarted
+  tags: win_service_mod
+
+
+#######################################################
+# for package installation on windows we should know 
+# silent installation of that package from source website then install
+# it by win_package module in ansible
+- name: ----- install package on windows -----
+  win_package:
+    path: C:\7-Zip.exe
+    product_id: 7-Zip
+    arguments: /S
+    state: present
+  tags: [install_7Zip]
+
+- name: ----- download package .msi file -----
+  win_get_url:
+    url: https://nodejs.org/dist/v12.18.3/node-v12.18.3-x64.msi
+    dest: C:\nodejs.msi
+  tags: [install_nodejs]
+
+- name: ----- install nodejs -----
+  win_package:
+    path: C:\nodejs.msi
+    state: present
+  tags: [install_nodejs]
+
+
+
+- name: ----- set env on windows -----
+  win_environment:
+    name: myvar
+    value: 123
+    state: present
+    level: machine # user / process
+  tags: [env_win]
+
+
+- name: ----- displaye message to users on windows -----
+  win_msg:
+    display_seconds: 60 
+    msg: Please rebbot system
+  tags: [msg_win ]
+
+
+
+
+
+
+

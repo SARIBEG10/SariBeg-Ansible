@@ -1,0 +1,13 @@
+- name: ----- run commands on mikrotik router -----
+  routeros_command:
+    commands:
+      - /ip address print
+  register: command_out
+  tags: mikrotik_output
+
+- name: ----- command_out -----
+  debug:
+    msg: "{{ command_out.stdout }}"
+  tags: mikrotik_output
+
+# ansible-playbook -i inventory/hosts mikrotik-playbook.yml -k

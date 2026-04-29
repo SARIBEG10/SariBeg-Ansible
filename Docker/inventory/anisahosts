@@ -1,0 +1,50 @@
+[myservers]
+
+192.168.198.146 http_port=8082
+192.168.198.147 http_port=8080
+
+
+# 192.168.198.146 nginx_port=3000
+# 192.168.198.147 nginx_port=9990
+
+
+
+# 192.168.198.146 ansible_port=723 # destination ssh port 
+# 192.168.198.147:723
+
+#[myservers:vars]  # group variables
+#httpd_port=1080
+#ntp_server=ntp.anisa.server.ir
+
+
+# 192.168.198.146 ansible_connection=ssh ansible_become_user=ali ansible_become_pass="123456"
+# 192.168.198.147 http_port=8080
+
+
+
+
+################ Variables Merging ###########
+
+# [group_A]
+# 192.168.198.146 http_port=80
+# 192.168.198.147
+
+# [group_B]
+# 192.168.198.146
+# 192.168.198.147
+
+# [group_A:vars]
+# http_port = 8080
+# ansible_group_priority=10
+
+# [group_B:vars]
+# http_port = 8081
+# ansible_group_priority=5
+
+
+# [anisaservers:children]
+# group_A
+# group_B
+
+# [anisaservers:vars]
+# http_port =9990

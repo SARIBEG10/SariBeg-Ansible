@@ -1,0 +1,3 @@
+- hosts: win_server
+  roles:
+    - win

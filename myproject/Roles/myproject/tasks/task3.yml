@@ -1,0 +1,4 @@
+- name: ------- hello from task 3 -------
+  debug:
+    msg: "Hello from task 3"
+  tags: task3

@@ -1,0 +1,35 @@
+myvariable: "myvarsvariable"
+pesron:
+  name:
+    first_name: "Saribeg"
+    last_name: "Farmanain"
+  Organization: "Anisa"
+  City: "Tehran"
+
+
+users_list: ['user1', 'user2', 'user3']
+
+user_list:
+    - Amir
+    - Reza
+    - Mohammad
+    - Hamed
+
+user_list2: [Arya, pourya, Ehsan]
+httpd_port: 8080
+#nginx_port: 80
+
+mail-server: 192.168.198.170
+
+var1: "yes"
+var2: 0
+
+
+my_dict:
+  environment: Staging
+  app: myapp
+  version: v.1.0
+
+
+
+

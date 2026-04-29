@@ -1,0 +1,19 @@
+---
+- hosts: anisahosts
+  # become: yes # for all tasks set become
+  # ignore_errors: yes
+  gather_facts: False
+  vars:
+    - test_var: "hello"
+    - test_var2: "var2"
+  vars_files:
+      - var1.yml
+      - var2.yml
+      - var3.yml 
+  roles:
+    - myproject
+
+- import_playbook: prj2.yml
+
+
+

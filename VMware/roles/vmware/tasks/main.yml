@@ -1,0 +1,86 @@
+- name: ----- Create DATACENTER -----
+  vmware_datacenter:
+      datacenter_name: "MyDC"
+      hostname: "{{ groups.vCenter.ansible_ssh_host }}"
+      username: admin
+      password: "123456"
+      state: present
+      validate_certs: False
+  tags: create_DC
+
+
+- name: ----- Add/Remove ESXi Hosts From DC -----
+  vmware_host:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    datacenter_name: "{{ vcenter_datacenter_name }}"
+    cluster_name: "{{ cluster_name }}"
+    esxi_hostname: "{{ esxi_hostname }}"
+    esxi_username: "{{ esxi_username }}"
+    esxi_password: "{{ esxi_password }}"
+    state: present # absent
+  tags: create_ESXi
+
+
+- name: ----- create virtual machine -----
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    folder: /myvms
+    name: testvm
+    state: poweredon
+    template: template_el7
+    disk:
+      - size_gb: 10
+        type: thin
+        datastore: ds3_datastore
+    hardware:
+      - memory_mb: 512
+        scsi: paravirtul
+        num_cpus: 1
+    networks:
+      - name: VM Network
+        mac: aa:bb:cc:dd:23:r5
+        wait_for_ip_address: yes
+  delegate_to: localhost
+  register: deploy
+  tags: create_VM
+
+- name: ----- take snapshot from vm -----
+  vmware_guest_snapshot:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    datacenter: "MyDC"
+    folder: /myvms
+    name: testvm
+    snapshot_name: test_snapshot
+    description: "snapshot 1405/01/02"
+    state: present # absent/revert/remove_all
+  tags: take_snapshot
+
+- name: ----- vmotion -----
+  vmware_vmotion:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      vm_name: testvm
+      destination_host: "{{ destination_host }}" 
+      validate_certs: no
+  tags: vmotion
+
+- name: ----- deploy OVF or OVA  -----
+  vmware_deploy_ovf:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    ovf: /tmp/myovf.ovf
+    datacenter: DC1
+    datastore: ds3_datastore
+    name: myvm
+    power_on: no # yes
+  tags: ovf
+

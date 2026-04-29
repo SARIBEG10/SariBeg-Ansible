@@ -1,0 +1,1806 @@
+---
+
+
+  ################################# VARIABLES ####################################################################################
+
+- set_fact: myvar=123
+- name: ----- show myvar ---
+  debug:
+    msg: "{{myvar}}"
+  tags: debug_mod
+
+- name: ----- show test_var in main-playbook.yml -----
+  debug:
+    msg: "{{ test_var }} ---- {{ test_var2 }}"
+  tags: show_testvar
+
+- name: ----- show vars in /roles/myproject/vars -----
+  debug:
+    msg: "{{myvariable}}"
+  tags: show_varsdir_variables
+
+- name: ----- show person info from /roles/myproject/vars -----
+  debug:
+      msg: "first-name: {{ person.name.first_name}} , last-name: {{ person.name.last_name }} ,Organization: {{ person.Organization }}, City: {{ person.City }}"
+  tags: person_info
+
+- name: ----- show user_list names -----
+  debug:
+    msg: "{{user_list}}"
+  tags: show_users
+
+- name: ----- show user_list names -----
+  debug:
+    msg: "{{ user_list2 }}"
+  tags: show_users2
+  
+- name: ----- show user_list first name -----
+  debug:
+    msg: "{{ user_list2[0] }}"
+  tags: show_users2_first_name
+
+
+- name: ----- show myvar in var1.yml, var2.yml, var3.yml files -----
+  debug:
+    msg: "{{ myvar }}" # print 789 in var3.yml because last file
+  tags: show_myvar
+
+- name: ----- extra variables -----
+  debug:
+    msg: "{{ package_name }}, {{ nodes }}" # ansible-playbook -i inventory/anisahosts main-playbook.yml -e "package_name=apache, nodes=192.168.198.146"
+    # ansible-playbook -i inventory/anisahosts main-playbook.yml -e '{"package_name":"apache", "nodes": "myservers"}' this format set variables types to String
+  tags: show_extra_vars
+
+
+#################### Built-in Vars #########################
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{hostvars}}"
+  tags: builtin_vars
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{ inventory_hostname }}"
+  tags: builtin_vars
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{group_name}}"
+  tags: builtin_vars
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{groups}}"
+  tags: builtin_vars
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{ play_hosts }}"
+  tags: builtin_vars
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{ ansible_version }}"
+  tags: builtin_vars
+  
+
+- name: ----- show Built-in variables -----
+  debug:
+    msg: "{{ group_variable }}"
+  tags: builtin_vars
+
+
+
+
+################## Host Variables in anisahosts #############
+- name: ----- show http port -----
+  debug:
+    msg: "{{ http_port  }}"
+  tags: show_http_port
+
+
+
+
+
+################################# CONDITIONS ##########################################################################################
+
+################## When Basic ##################
+- set_facts: package_name = "httpd"
+  when: ansible_os_family == "RedHat"
+
+- set_facts: package_name = "apache2"
+  when: ansible_os_family == "Suse"
+
+- name: "check CPU Type Supported"
+  debug: 
+    msg: "The Cpu type is Not supported"
+  when: ansible_machine != "x86_64"
+
+- name: "check apache2 installed on remote  host or not "
+  shell: rpm -qa | grep "apache2"
+  register: apache2_output
+
+- name: 'check if apache2 prefork installed'
+  debug:
+    msg: "apache2 prefork installed"
+  when: "'apache2-prefork' in apache2_output.stdout"
+
+
+
+
+
+
+##############################################  Package_facts Module  ##################################
+- name: ------- gather package facts -------
+  package_facts:
+    manager: auto # apt or rpm 
+  tags: [package_facts]
+
+- name: ------- get nginx info from package_facts -------
+  debug:
+    var: ansible_facts.packages['nginx']
+  tags: [package_facts]
+
+- name: ------- check nginx installed or not -------
+  debug: 
+    msg: "Nginx is Installed"
+  when: "'nginx' in ansible_facts.packages['nginx']"
+  tags: [package_facts]
+
+
+
+
+
+
+
+##############################################  Pause Module  ##################################
+- name: ------- input from user -------
+  pause:
+    prompt: "Enter your name:" # give prompt on single remote host
+  register: user_name
+  tags: pause_mod
+
+- name: ------- show user name -------
+  debug:
+    msg: "{{user_name}}"
+  ignore_errors: yes
+  tags: pause_mod
+
+- name: ------- check if backup path is defined -------
+  pause:
+    prompt: "The backup_path is not defined! Please enter path:"
+  register: backup_path2
+  when: backup_path is not defined
+  tags: pause_mod2
+
+
+
+# - name: ------- check nginx installed on centos7 -------
+#   package_facts:
+#     manager: rpm
+#   tags: nginx_mod_mail
+
+# - name: ------- check nginx installed on centos7 -------
+#   debug:
+#     var: ansible_facts.packages['nginx']
+#   tags: nginx_mod_mail
+
+# - name: ------- check nginx installed on centos7 -------
+#   debug:
+#     mgs: "Nginx is Installed"
+#   when: "'nginx' in ansible_facts.packages['nginx']"
+#   tags: nginx_mod_mail
+
+
+
+- name: ------- install nginx on centos7 -------
+  yum:
+    name: nginx
+    state: present
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  tags: nginx-mod-mail
+
+# - name: ------- check nginx installed on centos7 -------
+#   shell: rpm -qa | grep  nginx-mod-mail
+#   register: nginx-mod-mail
+#   tags: nginx_mod_mail
+
+- name: ------- check nginx installed on centos7 -------
+  package_facts:
+     manager: rpm
+  tags: nginx_mod_mail
+
+- name: ------- check nginx installed on centos7 -------
+  debug:
+     var: ansible_facts.packages['nginx-mod-mail']
+  tags: nginx_mod_mail
+
+- name: ------- check nginx installed on centos7 -------
+  debug:
+    msg: "nginx-mod-mail is Installed"
+  when: "'nginx-mod-mail' in nginx-mod-mail.output"
+  tags: nginx_mod_mail
+
+- name: ------- check /home/dir1 exist -------
+  stat:
+    path: /home/dir1
+  register: path_out
+  tags: path_out_check 
+
+- name: ------- check /home/dir1 exist -------
+  debug:
+    msg: "Path Exist"
+  when: path_out.stat.exists
+  tags: path_out_check
+
+
+- name: ------- check if test.txt contains word Ansible -------
+  shell: cat /home/test.txt
+  register: catty
+  tags: cond_1
+
+- name: ------- check if test.txt contains word Ansible -------
+  debug:
+    msg: "test.txt contain Ansible word"
+  when: catty.stdout.find('Ansible') != -1
+  tags: cond_1
+
+- name: ------ Exercise Roles/vars/main.yml -------
+  shell: echo "var1 is True"
+  when: var1 or var2 | bool # These change variable values to boolean True or False
+  tags: cond_2
+
+- name: ------- not condition -------
+  debug:
+    msg: "var1 is True"
+  when: not var1
+  tags: cond_3
+
+
+
+- name: ------- Exercise Ask user to delete file -------
+  pause:
+    prompt: "Do you want to delete /home/test.txt? (yes/no)"
+  register: answer
+  tags: delete_file
+
+- name: ------- Exercise Ask user to delete file -------
+  file:
+    path: /home/test.txt
+    state: absent
+  when: hostvars[play_hosts.0].confirm_delete.user_input | bool
+  tags: delete_file
+
+
+
+
+
+
+
+
+
+################################# LOOPS #####################################################################################################
+
+- name: ------- Basic -------
+  debug:
+      msg: "{{ item }}"
+  with_items:
+      - a1
+      - a2
+  tags: loop_1
+
+- name: ------- Basic -------
+  debug:
+      msg: "{{ item }}"
+  loop:
+      - a1
+      - a2
+  tags: loop_2
+
+- name: ------- Install packages on remote host -------
+  yum: 
+    name: ['nginx', 'curl', 'telnet']
+    state: present
+  tags: loop_3
+
+
+- name: ------- create users on remote hosts -------
+  user:
+    name: "{{item }}"
+    state: present 
+    home: /tmp/{{item}}
+    group: devops
+    shell: /bin/bash
+  loop: "{{ users_list }}"
+  tags: create_user
+
+- name: ------- json style loop -------
+  yum:
+    name: "{{item.name}}"
+    state: "{{item.state}}"
+  with_items:
+    - {name: 'nginx', state: 'present'}
+    - {name: 'telnet', state: 'absent'}
+  tags: json_loop
+    
+- name: ------- Nested loop -------
+  mysql_user:
+    name: "{{ item[0] }}"
+    priv: "{{ item[1] }}.*:ALL"
+    state: present
+    password: '123456'
+    append_privs: yes # append new priviledges to previous ones
+    login_user: root
+  no_log: True
+  with_nested:
+    - ['saribeg', 'Lili']
+    - ['clientdb', 'employeedb', 'providerdb']
+  tags: nested_loop1
+
+- name: ------- Dictionary Loop -------
+  debug:
+    msg: "{{ item.key }} - {{ item.value }}"
+  loop: "{{ my_dict | dict2items }}"
+  tags: dict_loop
+
+
+- name: ------- Loop over Inventory -------
+  debug:
+    msg: "{{ item  }}"
+  loop: "{{ groups['myservers'] }}"
+  tags: inventory_loop1
+
+
+- name: ------- Loop over Inventory -------
+  debug:
+    msg: "{{ item  }}"
+  loop: "{{ groups['all'] }}"
+  tags: inventory_loop2
+
+- name: ------- Loop over Inventory -------
+  debug:
+    msg: "{{ item  }}"
+  loop: "{{ ansible_play_batch }}"
+  tags: inventory_loop3
+
+- name: ------- Loop Control -------
+  debug:
+    msg: "{{ item  }}"
+  loop: "{{ groups['myservers'] }}"
+  loop_control:
+      pause: 10 
+  tags: loop_control1
+
+
+- name: ------- Loop Index -------
+  debug:
+    msg: "{{ item  }} - {{ index }}"
+  loop: ['first', 'second', 'third']
+  loop_control:
+      index_var: index
+  tags: loop_control2
+
+- name: ------- until loop -------
+  shell: cat /home/test.txt
+  register: catty
+  until: catty.stdout.find('Ansible') != 1
+  retries: 3
+  delay: 10
+  tags: until_loop
+
+
+
+- name: ------- create playbook structure -------
+  pause:
+    prompt: "Insert your project name: "
+  run_once: True
+  register: project_name
+  tags: playbook
+
+- name: ------- create playbook structure -------
+  file:
+    path: /home/{{project_name}}
+    mode: 0755
+    state: directory
+  run_once: True
+  tags: playbook
+
+- name: ------- create playbook structure -------
+  file:
+    path: /home/{{project_name}}/{{item}}
+    mode: 0755
+    state: directory
+  with_items:
+    - inventory
+    - Roles
+  tags: playbook
+
+- name: ------- create playbook structure -------
+  file:
+    path: /home/{{item}}/hosts
+    mode: 0644
+    state: touch
+  with_items:
+    - inventory
+  tags: playbook
+
+- name: ------- create playbook structure -------
+  file:
+    path: /home/{{project_name}}.yml
+    mode: 0644
+    state: touch
+  tags: playbook
+  
+- name: ------- create playbook structure -------
+  file:
+    path: /home/Roles/{{item}}
+    mode: 0755
+    state: directory
+  with_items:
+    - templates 
+    - tasks
+    - vars
+    - defaults
+    - handlers
+    - meta
+    - files
+  tags: playbook
+  
+- name: ------- create playbook structure -------
+  file:
+    path: /home/Roles/{{item}}/main.yml
+    mode: 0644
+    state: touch
+  with_items:
+    - tasks
+    - vars
+    - defaults
+    - handlers
+    - meta
+  tags: playbook
+  
+
+
+
+
+
+
+
+############################################## Ignore_errors Parameter  ##################################
+# we can use this paramateres for all modules
+- name: ----- Example by Command Module -----
+  command: /bin/false # generate failed error
+  tags: without_ignore_error
+
+- name: ----- debug -----
+  debug:
+    msg: "After Error"
+  tags: without_ignore_error
+
+
+- name: ----- Example by Command Module -----
+  command: /bin/false # generate failed error
+  ignore_errors: yes
+  tags: with_ignore_error
+
+- name: ----- debug -----
+  debug:
+    msg: "After Error"
+  tags: with_ignore_error
+
+
+############################################## Async Actions ##################################
+- name: ----- Async -----
+  yum:
+    name: '*'
+    state: latest
+  async: 7500 # maximum time take to finished this task on remote machines(assume 50 remote hosts)
+  poll: 5 # every 5 seconds check job status
+  tags: async_actions
+
+- name: ----- debug -----
+  debug:
+    msg: 'Task is started'
+  tags: async_actions
+
+######### Fire and Forget ###########
+- name: ----- Async -----
+  yum:
+    name: '*'
+    state: latest
+  async: 7500 # maximum time take to finished this task on remote machines(assume 50 remote hosts)
+  poll: 0 
+  tags: async_actions
+  
+- name: ----- debug -----
+  debug:
+    msg: 'next Task is running'
+  tags: async_actions
+
+
+############################################################# MODULES #############################################################
+
+
+############################################## File Module ##################################
+
+- name: ----- create dir on dest server /home ----- 
+  file: path=/home/dir1 state=directory owner=root group=root mode=0755
+  tags: create_dir1
+
+- name: ----- create dir2 on dest system -----
+  file:
+    path: /home/dir2
+    state: directory # absent , if present delete it
+    owner: root
+    group: root
+    mode: 0755
+  tags: create_dir2
+
+- name: ----- create file1 on dest system in /home/dir1-----
+  file:
+    path: /home/dir1/file1
+    state: touch # absent , if present delete it
+    owner: root
+    group: root
+    mode: 0644
+  tags: create_file1
+
+
+- name: ----- create file2 on dest system in /home/dir2 -----
+  file:
+    path: /home/dir2/file2
+    state: touch
+    owner: root
+    group: root
+    mode: 0644
+  tags: create_file2
+
+
+
+############################################## Command Module ##################################
+
+- name: ----- command module -----
+  command: mkdir /home/dir1/file1
+  register: catty
+  tags: command_mod
+- debug:
+    msg: "{{catty}}"
+  tags: command_mod
+
+
+- name: ----- command module -----
+  command: mkdir /home/dir1/file1
+  register: catty
+  tags: command_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+
+- name: ----- command module -----
+  command: cat file1
+  args:
+    chdir: /home # change dir and run command in this dir
+  register: catty
+  tags: command_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+
+- name: ----- command module -----
+  command: cat testfile
+  args:
+      chdir: /home
+      creates: /home/dir1/dir4 # if this file or path doesnt exist on dest system, command will run
+  register: catty
+  tags: command_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+
+- name: ----- command module -----
+  command: cat testfile
+  args:
+      chdir: /home
+      removes: /home/dir1/dir4 # if this file or path doesnt exist on dest system, command Won't run
+  register: catty
+  tags: command_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+
+- name: ----- command Module -----
+  command: df -h
+  register: catty
+  tags: command_mod
+
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+#### Raise Error ####
+#### TEST THIS BY Shell Module ####
+- name: ----- command Module -----
+  command: ps -aux | grep ansible
+  register: catty
+  tags: command_mod
+
+- name: ----- debug -----
+  debug:
+    msg: "{{catty.stdout}}"
+  tags: command_mod
+
+
+
+############################################## Expect Module ##################################
+- name: ----- Expect Module -----
+  expect:
+    command: passwd ali # This User should exist on dest systems
+    responses:
+        password: "123456"
+  no_log: True # if you want Hide logs in -vvv switch
+  tags: expect_mod
+
+
+
+############################################## Script Module ##################################
+- name: ----- script module -----
+  script: test.sh # put it under files folder
+  args:
+    chdir: /home/dir1/dir4/scripts
+    #creates: /home/dir1/dir4/scripts
+    removes: /home/dir1/dir4/scripts # if not exists on the dest systems , script doesnt run
+  register: script_out
+  tags: script_mod
+
+- name: ----- debug -----
+  debug:
+    msg: "{{ script_out.stdout_lines }}"
+  tags: script_mod
+
+
+############################################## Shell Module ##################################
+- name: ----- shell module -----
+  shell: ps -aux | grep ansible; echo "hello from ansible server " > /home/TestFile # support < > | which doesnt supported by command module
+  args:
+    creates: /home/dir1/dir4
+  register: shell_out
+  tags: shell_mod
+
+- name: ----- debug -----
+  debug: msg="{{ shell_out.stdout_lines }}"
+  tags: shell_mod
+
+
+- name: ----- Exercise combined shell and script module -----
+  script: echo.sh 
+  args: 
+    chdir: /home/dir1
+    removes: /home/dir1/file1
+  register: scp_out
+  tags: scpt_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{ scp_out.stdout_lines }}"
+  tags: scpt_mod
+
+- name: ----- Exercise combined shell and script module -----
+  shell: cat < /home/dir1/file1; ps -aux | grep ansible; df -h; curl -v anisa.co.ir
+  args:
+    removes: /home/dir1/file1
+  register: shell_out
+  tags: shell_mod2
+
+- name: ----- debug -----
+  debug:
+    msg: "{{ shell_out.stdout_lines }}"
+  tags: shell_mod2
+
+
+############################################## Raw Module ##################################
+################## Run commands On the systems which doesnt have python installed Like: Cisco,Mikrotik,... ###############
+- name: ----- Raw Module -----
+  raw: echo "This is Cisco Switch" > /home/dir2/file2
+  register: cisco_out
+  tags: raw_mod
+- name: ----- debug -----
+  debug:
+    msg: "{{cisco_out.stdout}}"
+  tags: raw_mod
+
+
+
+############################################## Copy Module ##################################
+
+- name: ----- copy module -----
+  copy:
+    src: test.txt
+    dest: /home/dir1
+    owner: root
+    group: root
+    mode: 0644
+    force: no # default yes
+    backup: yes
+  tags: copy_mod
+
+
+- name: ----- copy module -----
+  copy:
+    src: test.txt
+    dest: /opt
+    owner: root
+    group: root
+    mode: 0644
+    force: no # default yes
+    backup: yes
+    remote_src: yes # local copy on remote hosts, src exist on remote system not on ansible server 
+  tags: copy_mod
+
+
+- name: ----- copy module -----
+  copy:
+    src: /home/testdir # if directory empty , copy doesnt work 
+    dest: /home
+    owner: root
+    group: root
+    mode: 0755
+    # force: yes # default yes
+    # backup: yes
+  tags: copy_mod
+
+
+
+############################################## Fetch Module ##################################
+
+- name: ----- fetch module -----
+  fetch:
+    src: /home/dir1/file1
+    dest: /home/ # download file1, per host create directory by their IP address , by their tree structure from remote hosts
+  tags: fetch_mod
+
+
+- name: ----- fetch module -----
+  fetch:
+    src: /home/dir1/file1
+    dest: /home/
+    flat: yes # download file1 only , in /home 
+  tags: fetch_mod
+
+
+- name: ----- fetch module -----
+  fetch:
+    src: /home/dir1/file1
+    dest: /home/ 
+    flat: yes
+    validate_checksum: no # same file exist on multiple remote hosts, same file checksum doesnt checked , and only download  same file from first host 
+  tags: fetch_mod
+
+
+
+############################################## Group Module ##################################
+- name: ----- group module -----
+  group:
+    name: devops
+    state: present # absent , if present delete it
+  tags: group_mod
+
+############################################## User Module ##################################
+- name: ----- user module -----
+  user:
+    name: saribeg
+    group: devops
+    state: present # absent , if present delete it 
+    shell: /bin/bash
+    home: /home/saribeg
+  tags: user_mod
+
+
+
+- name: ----- Exercise combined group and user and expect module -----
+  group:
+    name: anisa
+    state: present
+  tags: [group_user_mod]
+
+- name: ----- Exercise combined group and user and expect module -----
+  user:
+    name: devops
+    state: present
+    group: anisa
+    shell: /bin/bash
+    home: /tmp/devops
+  tags: [group_user_mod]
+
+- name: ----- Exercise combined group and user and expect module -----
+  expect:
+    command: passwd devops
+    responses: 
+      password: "123"
+  tags: [group_user_mod]
+
+
+############################################## yum_repository Module ##################################
+- name: ----- yum_repository module -----
+  yum_repository:
+    name: epel2
+    description: test repo
+    baseurl: https://download.fedoraptoject.org/pub/epel/$releasever/$basearch/
+    gpgcheck: no
+    enabled: yes
+    state: present
+  tags: [yum_repo_mod]
+
+
+############################################## yum Module ##################################
+- name: ----- yum module -----
+  yum:
+    name: nginx
+    state: present
+  tags: [yum_mod]
+
+
+
+############################################## yum update Module ##################################
+- name: ----- update nginx -----
+  yum: 
+    name: nginx
+    state: latest # if package installed update it to latest version elif download and install latest version
+    update_only: yes # check if Only, package/packages installed on remote hosts then update them 
+    # security: yes
+    # bugfix: yes
+  tags: [update_nginx]
+
+- name: ----- update all packages -----
+  yum:
+    name: '*'
+    state: latest
+    update_only: yes
+  tags: [update_all]
+
+
+- name: ----- update all packages except kernel packages -----
+  yum:
+    name: '*'
+    state: latest
+    exclude: kernel* # exclude packages you dont want to update 
+    update_only: yes
+  tags: [update_all_except_kernel]
+
+
+############################################## yum list Module ##################################
+- name: ----- yum list available packages -----
+  yum:
+    list: nginx
+  register: yum_list_out
+  tags: [yum_list]
+
+- name: ----- yum list available packages -----
+  debug:
+    msg: "{{ yum_list_out }}"
+  tags: [yum_list]
+
+
+
+############################################## yum Module Exercise ##################################
+- name: ----- list apache version -----
+  yum:
+    list: httpd
+  register: apache_out
+  tags: [apache_list]
+
+- name: ----- list debug -----
+  debug:
+    msg: "{{apache_out}}"
+  tags: [apache_list]
+
+
+
+- name: ----- install apache -----
+  yum:
+    name: httpd
+    state: present
+  tags: [install_apache]
+
+- name: ----- update apache -----
+  yum:
+    name: httpd
+    state: latest
+    update_only: yes
+  tags: [update_apache]
+
+- name: ----- security updates -----
+  yum: 
+    name: '*'
+    state: latest
+    security: yes # only security updates downloaded
+  tags: [security_updates]
+
+- name: ----- bugfix updates -----
+  yum:
+    name: '*'
+    state: latest
+    bugfix: yes # only bugfix updates downloaded
+  tags: [bugfix_update]
+
+
+
+############################################## apt Module  ##################################
+- name: ----- apt install nginx -----
+  apt:
+    name: nginx
+    state: present
+  tags: [apt_mod]
+
+- name: ----- apt update nginx -----
+  apt:
+    name: nginx
+    state: latest
+    update_only: yes
+  tags: [apt_update]
+
+
+- name: ----- apt .deb package install nginx -----
+  apt:
+    deb: /opt/debian-package.deb
+  tags: [apt_deb]
+
+
+
+- name: ----- apt purge nginx -----
+  apt:
+    name: [nginx, nginx-common]
+    state: absent
+    purge: yes # Remove Configuration files, full Remove
+  tags: [apt_purge]
+
+
+- name: ----- apt autoremove nginx -----
+  apt:
+    autoremove: yes # Remove all unused depency packages
+  tags: [apt_autoremove]
+
+
+
+
+############################################## Template Module  ##################################
+- name: ----- template module -----
+  template:
+    src: nginx.conf.j2 # path to : /ansible-projects/myproject/Roles/myproject/templates/{your customized configuration files}
+    dest: /etc/nginx/nginx.conf 
+    owner: root
+    group: root
+    force: yes
+    backup: yes
+  tags: [template_mod]
+
+
+- name: ----- change nginx port by variable -----
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf 
+    owner: root
+    group: root
+    force: yes
+    backup: yes
+  tags: [nginx_port]
+
+
+- name: ----- change nginx port by vars/main.yml-----
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf 
+    owner: root
+    group: root
+    force: yes
+    backup: yes
+  tags: [nginx_port]
+
+
+- name: ----- Apache port change Exercise -----
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf 
+    owner: root
+    group: root
+    force: no
+    backup: yes
+  tags: [nginx_port]
+
+
+############################################## Lineinfile Module  ##################################
+- name: ----- insertafter -----
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertafter: '               listen     8080;'
+    line: '               listen     8083;'
+  tags: [lineinfile_insertafter_mod]
+
+
+- name: ----- insertbefore -----
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertbefore: '               listen     8080;'
+    line: '               listen     83;'
+  tags: [lineinfile_insertbefore_mod]
+
+
+- name: ----- insertafter -----
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertafter: '               listen     8080;'
+    line: '               listen     8083;'
+    state: absent # delete inserted line
+  tags: [lineinfile_insertafter_delete]
+
+
+- name: ----- insertbefore -----
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertbefore: '               listen     8080;'
+    line: '               listen     83;'
+   # state: absent # delete inserted line
+    state: present # insert line
+  tags: [lineinfile_insertbefore_add]
+
+
+
+
+- name: ----- lineinfile Exercise -----
+  lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      insertafter: '^#Listen'
+      line: 'Listen 8080'
+  tags: lineinfile_mod
+
+
+- name: ----- lineinfile Exercise -----
+  lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      insertafter: '^#Listen'
+      line: 'Listen 8080'
+      state: absent
+      backup: yes
+  tags: lineinfile_mod
+
+  
+
+############################################## Replace Module  ##################################
+- name: ----- replace module -----
+  replace:
+      path: /etc/nginx/nginx.conf
+      regexp: '               listen     80;'
+      replace: '               listen     8090;'
+  tags: [replace_mod]
+
+
+- name: ----- replace module -----
+  replace:
+      path: /etc/nginx/nginx.conf
+      regexp: '               listen     80;'
+      replace: '               listen     8090;'
+      after: 'Start after line .*' # if regex matched multiple line in file, you can specify start after position
+      before: 'Start before line .*' # if regex matched multiple line in file, you can specify start before position
+      backup: yes
+  tags: [replace_mod]
+
+
+############################################## Find Module  ##################################
+- name: ------- find all *.txt and *.conf files in /tmp -------
+  find:
+    paths: /tmp
+    file_type: file
+    recurse: yes
+    pattern: "*.txt,*.conf"
+    size: 2k
+    age: 1w
+  tags: find_mod
+
+- name: -----Exercise -------
+  local_action:
+    module: find
+    paths: /home
+    file_type: file
+    recurse: yes
+    pattern: '*.txt'
+    size: -1M #=< 1m <-wrong
+    age: -1W #=< 1w <-wrong
+  tags: find_mod_local
+
+
+############################################## local_action Module  ##################################
+- name: ------- create f10 on remote hosts -------
+  file: 
+    path: /home/f10
+    state: touch
+    mode: 0644
+  tags: create_f10_on_remotes
+
+- name: ------- create same f10 on localhost -------
+  local_action:
+    module: file
+    path: /home/f10
+    state: touch
+  tags: create_f10_on_localhost
+
+
+############################################## delegate_to Module  ##################################
+# Run single task on single host 
+# difference by --limit is : this parameter run single task on single host but --limit run all playbook on single host
+
+- name: ------- create file on single host -------
+  file:
+    state: touch
+    path: /home/d1
+  delegate_to: 192.168.198.142 # example remote host ip
+  tags: delegate_to
+
+
+############################################## Service Module  ##################################
+- name: ----- Exercise Service Module -----
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+  tags: [httpd_service]
+
+- name: ----- Exercise Service Module -----
+  template:
+      src: httpd.conf.j2
+      dest: /etc/httpd/conf/httpd.conf
+      force: yes
+      backup: yes
+  tags: [httpd_port_change]
+
+
+- name: ----- Exercise Service Module -----
+  replace:
+    regexp: '^Listen 80'
+    #line: 'Listen 1080'
+    line: 'Listen {{ httpd_port }}'
+    backup: yes
+  tags: [httpd_port_change_replace_mod]
+
+
+- name: ----- Exercise Service Module -----
+  service: 
+      name: httpd
+      state: restarted
+  tags: httpd_restart  
+
+
+
+
+############################################## Archive Module  ##################################
+- name: ----- Archive Module -----
+  archive:
+    path: /home/testdir/* # create file1, file2, file3, file4, file5 on the remote hosts in /home/testdir 
+    dest: /opt/testdir.tar.gz
+    remove: yes # remove source files after archive them 
+    exclude_path:
+      - /home/testdir/file1
+      - /home/testdir/file2
+  tags: [archive_mod]
+
+
+############################################## UnArchive Module  ##################################
+- name: ----- UnArchive Module -----
+  unarchive:
+      src: testarchive.tar.gz
+      dest: /home/test
+      exclude:
+          - f2
+     # keep_newer: no # Do Not Replace existing files that are newer than archive files
+     # creates: /home/dir1 # because path exists on remote hosts , doesnt run module
+     # remote_src: yes # archive source exist on remote host
+  tags: unarchive_mod
+
+
+
+- name: ----- Exercise Archive and UnArchive Module -----
+  file:
+    path: /home/dir1
+    state: directory
+    mode: 0755
+    group: root
+    owner: root
+  tags: create_dir1
+    
+
+
+- name: ----- Exercise Archive and UnArchive Module -----
+  file:
+    path: /home/dir1/{f1,f2,f3,f4}
+    state: touch
+    mode: 0644
+    group: root
+    owner: root
+  tags: create_f1_f4
+
+
+
+
+- name: ----- Exercise Archive and UnArchive Module -----
+  archive:
+      path: /home/dir1/*
+      dest: /tmp/test.tar.gz
+      remove: yes
+  tags: testarchive_mod
+
+
+- name: ----- Exercise Archive and UnArchive Module -----
+  unarchive:
+      src: /tmp/test.tar.gz
+      dest: /home/dir2
+      exclude:
+          - f2
+          - f3
+      remote_src: yes
+      keep_newer: no
+  tags: testunarchive_mod
+
+
+
+############################################## Wait_For Module  ##################################
+
+- name: ----- Wait_For Module -----
+  wait_for: 
+      timeout: 300 # Sleep for 300 seconds and continue with play
+  delegate_to: localhost
+
+
+- name: ----- Exercise Wait_For Module -----
+  wait_for:
+    path: /var/log/httpd/access_log
+    search_regex: 'ip_address' # waiting for matched ip_address of your remote host open browser and check apache
+  tags: [wait_for_mod]
+
+
+- name: ----- access -----
+  debug:
+    msg: "ip_address access to apache"
+  tags: [wait_for_mod]
+
+
+- name: ----- Exercise Wait_For Module -----
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+    backup: yes
+  tags: [apache_port]    
+
+- name: ----- Exercise Wait_For Module -----
+  service:
+    name: httpd
+    state: stopped
+  tags: [apache_stopped]    
+
+- name: -----Exercise Wait_For Module -----
+  wait_for:
+    # host: {{ myservers }} this parameter set only for single host , by default ansible check all hosts in inventory/anisahosts
+    port: 8080
+    delay: 10
+    state: started
+    register: catty
+  tags: [apache_port_wait]
+
+- name: ----- Exercise Wait_For Module -----
+  debug:
+    msg: {{ catty.stdout }}
+  tags: apache_port_wait
+
+- name: ----- Exercise Wait_For Module -----
+  service:
+    name: httpd
+    enabled: yes
+    state: started
+  tags: [apache_started]
+
+
+
+############################################## Wait_For_connection Module  ##################################
+- name: ----- Async Actions -----
+  shell: 'sleep 1 && reboot'
+  async: 1
+  poll: 5
+  ignore_errors: yes
+  tags: async_mod
+
+
+- name: ----- Wait_For_connection -----
+  wait_for_connection:
+    timeout: 60
+    delay: 5
+    sleep: 5
+  tags: async_mod
+
+
+- name: ----- debug -----
+  debug:
+    msg: "After Reboot"
+  tags: async_mod
+
+
+############################################## Reboot Module  ##################################
+- name: ----- Reboot Module -----
+  reboot:
+    reboot_timeout: 60
+  tags: reboot_mod
+
+- name: ----- debug -----
+  debug:
+    msg: "After Reboot"
+  tags: reboot_mod
+
+
+############################################## Mail Module  ##################################
+- name: ----- mail module -----
+  mail:
+    host: {{ mail-server }}
+    port: 25
+    from: farmaniansaribeg@gmail.com
+    to: All@spara.ir
+    subject: "Hello to coleagues"
+    body: "Hello to all my new colleagues"
+    charset: utf-8
+    headers: "Reply to=farmaniansaribeg@gmail.com"    
+    attach: /home/logo.png
+
+
+############################################## Mattermost Module  ##################################
+- name: ----- Mattermost Notification Module -----
+  mattermost:
+      url: https://chat.mycompany.ir
+      api_key: 656ncdbrwq0yxr7832
+      username: saribeg
+      channel: devops
+      text: "All new Tasks Assigned"
+  tags: [mattermost_mod]
+
+
+
+############################################## Telegram Module  ##################################
+- name: ----- Telegram Notification Module -----
+  telegram:
+    token: '7543059u6nbdfglgjihbds9346204jgb4yh' # Bot Token
+    chat_id: 00000
+    msg: "Ansible Telegram Module"
+  tags: telegram_mod 
+
+
+############################################## Subversion Module  ##################################
+- name: ----- Subversion Version Control Module -----
+  subversion:
+    repo: https://svn.myrepo.net/Wordpress/v1.0
+    dest: /opt/WD_Repo
+    username: saribeg
+    password: 123456
+    revision: 7
+  tags: svn_mod
+
+############################################## Git Module  ##################################
+- name: ----- Git Version Control Module -----
+  git:
+    repo: https://saribeg:123@192.168.98.145/Myrepo/python/telegram-bot
+    dest: /srv/Telegram_Repo
+    revision: 4
+  tags: git_mod
+
+
+
+############################################## Get_url  Module  ##################################
+- name: ----- Download from url -----
+  get_url:
+    url: ftp://anisa.ftp.ir/Courses/LPIC2/named.conf
+    dest: /home/my_courses
+    validate_certs: no
+    mode: 0644
+    timeout: 30
+    url_username: test
+    url_password: test
+  tags: get_url_mod
+
+
+
+############################################## Timezone  Module  ##################################
+- name: ----- Set Timezone to Asia/Tehan -----
+  timezone:
+    name: Asian/Tehran 
+
+
+- name: ----- Set ntp server configuration to asia -----
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    notify:
+      - restart ntp
+  tags: ntp_conf_mod
+
+
+
+- name: ----- Exercise Timezone Module -----
+  yum:
+    name: ntp
+    state: present
+    # enabled: yes
+  #  bugfix: yes
+   # security: yes
+  tags: ntpd_intsall
+
+- name: ----- Exercise Timezone Module -----    
+  template:
+      src: ntp.conf.j2
+      dest: /etc/ntp.conf
+      notify:
+        - restart ntp
+  tags: ntpd_mod
+
+- name: ----- Exercise Timezone Module -----
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+  tags: ntpd_start
+
+- name: ----- Exercise Timezone Module -----
+  service:
+    name: ntpd
+    state: restarted
+  tags: ntpd_restart
+
+- name: ----- Exercise Timezone Module -----
+  timezone:
+    name: Asia/Tehran
+  tags: set_timezone_mod
+
+
+- name: ----- Exercise Timezone Module -----
+  shell: timedatectl
+  args:
+    removes: /etc/ntp.conf
+  register: ntpstatus
+  tags: ntpd_status
+- name: ----- Exercise Timezone Module -----
+  debug:
+    msg: "{{ ntpstatus.stdout }}"  
+  tags: ntpd_status
+
+
+
+
+############################################## Synchronize  Module  ##################################
+- name: ----- Synchronize -----
+  synchronize:
+      mode: push # pull
+      src: /home/test-synch # create this directory on ansible server
+      dest: /home/dir1
+      archive: yes
+      compress: yes
+      delete: yes # if delete anything applied on local system src path applied on remote also 
+      rsync_path: sudo rsync
+      rsync_opts:
+        - "--exclude=/home/test-synch/*.jar"
+  tags: rsync_mod
+
+
+
+
+############################################## Iptables  Module  ##################################
+- name: ----- Iptables Block SSH from specific range -----
+  iptables:
+      chain: INPUT
+      action: insert
+      jump: DROP
+      protocol: TCP
+      source: 192.168.198.*
+      destination_port: 22
+      state: present
+  tags: ssh_block
+
+
+
+- name: ----- Iptables Exercise -----
+  yum:
+    name: httpd
+    state: present
+  tags: install_apache
+
+- name: ----- Iptables Exercise -----
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+  tags: start_apache
+
+- name: ----- Iptables Exercise -----
+  iptables:
+    chain: INPUT
+    action: APPEND
+    protocol: TCP
+    destination_port: 80
+    source: server2_ip
+    state: present
+    jump: ACCEPT
+  tags: access_apache_server2
+
+- name: ------- Iptables Exercise ----- # DO THIS MANUALLY BY curl FROM server2
+  shell: curl http://seerver1_ip
+  args:
+    removes: /etc/httpd/conf/httpd.conf
+  tags: test_apache_from_server2    
+
+
+
+- name: ------- Iptables redirect port 80 to 8080 -------
+  iptables:
+    table: nat
+    chain: PREROUTING
+    in_interface: eth0
+    destination_port: 80
+    to_ports: 8080
+    jump: REDIRECT
+    protocol: TCP
+    match: TCP
+    comment: "Redirect port 80 to 8080"
+  tags: iptables_nat
+
+
+
+
+- name: ----- Iptables Exercise -----
+  template: 
+      src: httpd.conf.j2
+      dest: /etc/httpd/conf/httpd.conf
+      backup: yes
+      force: yes
+      owner: root
+      group: root
+  tags: Iptables_apache      
+
+
+- name: ----- Iptables Exercise -----
+  iptables:
+    table: nat
+    in_interface: eth0
+    protocol: TCP
+    match: TCP
+    chain: PREROUTING
+    destination_port: 80
+    to_ports: 8080
+    jump: REDIRECT
+  tags: Iptables_apache
+
+
+############################################## Firewalld  Module  ##################################
+- name: ------- Firewalld Module -------
+  firewalld:
+    port: 80/tcp
+    zone: public
+    immediate: yes
+    permanent: yes
+    state: enabled
+  tags: firewalld_mod
+
+
+############################################## MySQL Module  ##################################
+- name: ------- Install MariaDB -------
+  yum:
+    name: mariadb-server
+    state: installed
+  tags: install_mariadb
+
+
+- name: ------- starte & enable MariaDB -------
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+  tags: start_mariadb
+
+
+- name: ------- MySQL-python Module install -------
+  yum:
+    name: MySQL-python
+    state: installed
+  tags: install_mysql-python
+
+
+- name: ------- create Database -------
+  mysql_db:
+    name: mydb
+    state: present
+  tags: create_db
+
+
+- name: -----Exercise -------
+  mysql_db:
+    name: db1
+    state: present
+  tags: create_db1
+
+
+- name: ------- Exercise open port 3306 -----
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    destination_port: 3306
+    state: present
+    action: APPEND
+    protocol: TCP
+  tags: open_port_3306
+
+
+- name: ------- dump db1 -------
+  mysql_db:
+    name: db1
+    state: dump
+    target: /home/saribeg/db1_dump.sql
+  tags: dump_db1
+
+
+- name: ------- delete a database -------
+  mysql_db:
+    name: db1 
+    state: absent
+  become: yes
+  tags: delete_db
+
+- name: ------- restore database -------
+  mysql_db:
+    name: db1
+    state: import
+    target: /home/saribeg/db1_dump.sql
+  tags: [restore_db, import_db]
+
+
+
+- name: ------- create user in Database -------
+  mysql_user:
+    name: saribeg
+    state: present
+    password: "12345"
+    priv: "mydb.*:ALL"
+  no_log: True # for password logging for security purposes
+  tags: create_user_db
+
+
+
+- name: ------- Exercise 2 -------
+  mysql_db:
+    name: db1
+    state: dump
+    target: /home/db1.sql
+  tags: backup_db1
+
+- name: ------- Exercise 2 -------
+  mysql_db:
+    name: db1
+    state: import
+    target: /home/db1.sql
+  tags: restore_db1
+
+- name: ------- Exercise 2 -------
+  mysql_user:
+    name: anisa
+    password: "123"
+    priv: "db1.*:ALL"
+    state: present
+  tags: add_user_db1
+
+
+
+- name: ------- create multiple databases -------
+  mysql_db:
+    name: "{{item}}"
+    state: present # dump , import, absent
+  loop: ['clientdb', 'employeedb', 'providerdb']
+  tags: create_multidb
+
+
+- name: ------- create multiple users -------
+  mysql_user:
+    name: "{{item.name}}"
+    password: "{{item.password}}"
+    state: present
+  with_items:
+      - {name: 'ali', password: '1234'}
+      - {name: 'reza', password: '123456'}
+      - {name: 'hosein', password: '108090'}
+  no_log: True
+  tags: create_multiuser
+
+
+
+- name: ------- Nested loop -------
+  mysql_user:
+    name: "{{ item[0] }}"
+    priv: "{{ item[1] }}.*:ALL"
+    state: present
+    password: '123456'
+    append_privs: yes # append new priviledges to previous ones
+    login_user: root
+  no_log: True
+  with_nested:
+    - ['saribeg', 'Lili']
+    - ['clientdb', 'employeedb', 'providerdb']
+  tags: nested_loop1
+
+- name: ------- Dictionary Loop -------
+  debug:
+    msg: "{{ item.key }} - {{ item.value }}"
+  loop: "{{ my_dict | dict2items }}"
+- import_tasks: task3.yml
+  tags: dict_loop
+
+
+
+
+############################################################# HANDLERS #############################################################
+
+- name: ------- change nginx conf and restart without handlers -------
+  template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+  tags: config_nginx
+
+- name:  ------- change nginx conf and restart without handlers -------
+  service:
+    name: nginx
+    state: restarted
+  tags: config_nginx
+
+- name: ------- change nginx config and restart with handlers -------
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - restart nginx
+  tags: nginx_hanlder
+
+- name: ------- Exercise apache config change -------
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+  notify:
+    - restart apache
+  tags: apache_config
+
+- name: ------- Exercise apache config change -------
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+  notify:
+    - restart apache
+  tags: apache_config
+
+
+
+
+############################################## MOUNT MODULE ###########################################################
+- name: ------- mount the nfs on clients -------
+  mount:
+    fstype: nfs
+    src: "{{item}}/data1"
+    path: /data1    
+    state: mounted
+    opts: rw,sync,hard,intr
+  with_items:
+    - "{{ groups.nfs_server }}"
+  when: server_role == "nfsclient"
+  tags: mount_nfs_on_clients
+
+
+
+

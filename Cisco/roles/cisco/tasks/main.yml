@@ -1,0 +1,16 @@
+- name: ----- run commands on cisco devices -----
+  ios_command:
+    commands:
+      - show ip int br
+      - show vlans
+      - show version
+      - show interfaces
+  register: cisco_out
+  tags: command_out
+
+- name: ----- command_out -----
+  debug:
+    msg: "{{ cisco_out }}"
+  tags: command_out
+
+# ansible-playbook -i inventory/hosts mikrotik-playbook.yml -k

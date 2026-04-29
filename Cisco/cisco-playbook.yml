@@ -1,0 +1,8 @@
+---
+- hosts:
+    - myswitches
+  connection: network_cli
+  remote_user: saribeg
+  gather_facts: False
+  roles:
+    - cisco
