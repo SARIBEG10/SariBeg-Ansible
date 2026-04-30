@@ -1,17 +1,18 @@
-ANSIBLE PLAYBOOKS FOR:
+# ANSIBLE PLAYBOOKS FOR:
 
-- Cisco Devices
+## :one: Cisco Devices
 
-- Mikrotik
+## :two: Mikrotik
 
-- VMware
+## :three: VMware
 
-- Docker
+## :four: Docker
 
-- Windows
+## :five: Windows
 
-- NFS
+## :six: NFS
 
-- Useful Basic Modules in myproject Folder
+## :seven: Useful Basic Modules in myproject Folder
 
-NOTE: All Playbooks and their Tasks have description 
+>[!NOTE]:
+>All Playbooks and their Tasks have description 
