@@ -14,5 +14,5 @@
 
 ## :seven: Useful Basic Modules in myproject Folder
 
->[!NOTE]:
+>[!NOTE]
 >All Playbooks and their Tasks have description 
